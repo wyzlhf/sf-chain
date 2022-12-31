@@ -1,5 +1,6 @@
 const Transaction=require('./transaction')
 const Wallet=require('./index')
+const {MINING_REWARD}=require('../config')
 
 describe('Transaction',()=>{
     let transaction,wallet,recipient,amount
@@ -7,7 +8,7 @@ describe('Transaction',()=>{
         wallet=new Wallet()
         amount=50
         recipient='r3c1p13nt'
-        transaction=Transaction.netTransaction(wallet,recipient,amount)
+        transaction=Transaction.newTransaction(wallet,recipient,amount)
     })
     it('should output the `amount` subtracted from the wallet balance', function () {
         expect(transaction.outputs.find(output=>output.address===wallet.publicKey).amount)
@@ -31,7 +32,7 @@ describe('Transaction',()=>{
     describe('transacting with an amount that exceeds the balance',()=>{
         beforeEach(()=>{
             amount=50000
-            transaction=Transaction.netTransaction(wallet,recipient,amount)
+            transaction=Transaction.newTransaction(wallet,recipient,amount)
         })
         it('should not create the transaction', function () {
             expect(transaction).toEqual(undefined)
@@ -52,6 +53,15 @@ describe('Transaction',()=>{
         it('should output an amount for the next recipient', function () {
             expect(transaction.outputs.find(output=>output.address===nextRecipient).amount)
                     .toEqual(nextAmount)
+        });
+    })
+    describe('creating a reward transaction',()=>{
+        beforeEach(()=>{
+            transaction=Transaction.rewardTransaction(wallet,Wallet.blockchainWallet())
+        })
+        it(`should reward the miner's wallet`, function () {
+            expect(transaction.outputs.find(output=>output.address===wallet.publicKey).amount)
+                    .toEqual(MINING_REWARD)
         });
     })
 })
